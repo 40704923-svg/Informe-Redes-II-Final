@@ -61,7 +61,7 @@ Así, `dbexporter` dispone de la configuración necesaria para conectarse a MySQ
 - **`networks`** indica a qué red se conecta cada servicio.
 - **`restart: always`** configura una política de reinicio.
 
-- ## Parte 2 — Recolección de métricas: cAdvisor y Prometheus
+ ## Parte 2 — Recolección de métricas: cAdvisor y Prometheus
 
 ### 2.1. Servicio cAdvisor
 

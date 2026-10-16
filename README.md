@@ -61,4 +61,73 @@ Así, `dbexporter` dispone de la configuración necesaria para conectarse a MySQ
 - **`networks`** indica a qué red se conecta cada servicio.
 - **`restart: always`** configura una política de reinicio.
 
+- ## Parte 2 — Recolección de métricas: cAdvisor y Prometheus
+
+### 2.1. Servicio cAdvisor
+
+El servicio `cadvisor` utiliza la imagen `gcr.io/cadvisor/cadvisor:v0.47.2`. Su función es recopilar información sobre el uso de recursos y el estado de los contenedores que se ejecutan en el host.
+
+En el archivo `docker-compose.yml`, cAdvisor tiene varios montajes de directorios del sistema:
+
+- `/:/rootfs:ro`
+- `/var/run:/var/run:ro`
+- `/sys:/sys:ro`
+- `/var/lib/docker/:/var/lib/docker:ro`
+- `/dev/disk/:/dev/disk:ro`
+
+En cada montaje, la ruta de la izquierda corresponde al host y la de la derecha al destino dentro del contenedor. El sufijo `ro` indica que el montaje es de solo lectura. Esto permite que cAdvisor consulte información del sistema y de Docker sin tener permiso de escritura a través de esos montajes.
+
+El servicio también está conectado a la red `mynetwork`, por lo que Prometheus puede acceder a sus métricas utilizando el nombre `cadvisor` como dirección de destino.
+
+### 2.2. Servicio Prometheus
+
+Prometheus utiliza la imagen `prom/prometheus:latest`. Su función es recolectar y almacenar las métricas expuestas por los servicios configurados como objetivos de monitoreo.
+
+El archivo `docker-compose.yml` publica el puerto `9090` mediante la configuración:
+
+`"9090:9090"`
+
+El primer puerto corresponde al host y el segundo al contenedor. De esta manera, la interfaz web de Prometheus puede consultarse desde el host a través del puerto 9090.
+
+El servicio monta el archivo de configuración `prometheus.yml` mediante:
+
+`./prometheus.yml:/etc/prometheus/prometheus.yml`
+
+Esto permite que Prometheus utilice el archivo de configuración generado por el proyecto.
+
+### 2.3. Configuración de recolección
+
+En `prometheus.yml` se define un intervalo de recolección de cinco segundos mediante `scrape_interval: 5s`.
+
+La configuración incluye cuatro objetivos:
+
+- `localhost:9090`, para recolectar métricas de Prometheus.
+- `cadvisor:8080`, para obtener métricas de cAdvisor.
+- `dbexporter:9104`, para obtener métricas relacionadas con MySQL.
+- `host.docker.internal:8888`, para consultar las métricas de la aplicación CRUD que se ejecuta en el host.
+
+Los nombres `cadvisor` y `dbexporter` permiten que Prometheus encuentre esos servicios dentro de la red compartida de Docker. En cambio, la aplicación CRUD se ejecuta directamente en el host y utiliza el puerto 8888.
+
+### 2.4. Uso de extra_hosts
+
+El servicio Prometheus contiene la configuración:
+
+`host.docker.internal:host-gateway`
+
+La directiva `extra_hosts` agrega una entrada al archivo de hosts del contenedor. En este caso, permite resolver el nombre `host.docker.internal` hacia la dirección del host proporcionada por Docker mediante `host-gateway`.
+
+Esto es necesario para que Prometheus pueda consultar las métricas de la aplicación CRUD que se ejecuta fuera de los contenedores, en el host, en el puerto 8888.
+
+### 2.5. Sintaxis YAML aplicada
+
+- **`ports`** publica puertos del contenedor en el host.
+- **`volumes`** monta archivos y directorios.
+- **`extra_hosts`** agrega nombres y direcciones al archivo de hosts del contenedor.
+- **`scrape_interval`** define cada cuánto tiempo Prometheus intenta recolectar métricas.
+- **`scrape_configs`** agrupa la configuración de los objetivos que se van a monitorear.
+- **`static_configs`** permite declarar objetivos de recolección de forma estática.
+- **`targets`** contiene las direcciones y puertos de los objetivos.
+
+La indentación es importante en YAML porque establece la relación entre las claves y sus valores. Una estructura incorrecta puede impedir que la configuración sea interpretada correctamente.
+
 En YAML, la indentación determina la relación entre las claves y sus valores. Mantener una estructura correcta permite que el archivo sea interpretado adecuadamente.

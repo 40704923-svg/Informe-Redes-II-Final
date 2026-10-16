@@ -130,4 +130,63 @@ Esto es necesario para que Prometheus pueda consultar las métricas de la aplica
 
 La indentación es importante en YAML porque establece la relación entre las claves y sus valores. Una estructura incorrecta puede impedir que la configuración sea interpretada correctamente.
 
+## Parte 3 — Visualización y topología: Grafana y mynetwork
+
+### 3.1. Servicio Grafana
+
+El servicio `grafana` utiliza la imagen `grafana/grafana:13.2.2`. Esta versión está fijada intencionalmente en la configuración del proyecto para mantener la interfaz coherente con la guía utilizada en la práctica.
+
+Grafana permite visualizar las métricas recolectadas por Prometheus mediante paneles y gráficos. De esta manera, la información recopilada puede consultarse de forma más clara.
+
+El archivo `docker-compose.yml` publica el puerto `3000` mediante la configuración:
+
+`"3000:3000"`
+
+El primer puerto corresponde al host y el segundo al contenedor. Esto permite acceder a la interfaz web de Grafana desde el host utilizando el puerto 3000.
+
+Además, el servicio define la variable de entorno `GF_SECURITY_ADMIN_PASSWORD=admin`, que establece la contraseña del usuario administrador en esta configuración de práctica. Para un entorno real, se recomienda utilizar una contraseña segura y evitar incluir credenciales directamente en archivos versionados.
+
+### 3.2. Dependencia con Prometheus
+
+En la configuración de Grafana aparece:
+
+`depends_on:`
+
+`  - prometheus`
+
+Esta dependencia indica que Docker Compose debe iniciar Prometheus antes que Grafana. Sin embargo, no garantiza que Prometheus esté completamente preparado para recibir conexiones cuando Grafana se inicia.
+
+La relación entre ambos servicios permite que Grafana utilice Prometheus como fuente de datos para consultar las métricas recolectadas.
+
+### 3.3. Red compartida mynetwork
+
+Los cinco servicios del archivo `docker-compose.yml` están conectados a la red `mynetwork`, declarada al final de la configuración.
+
+La red compartida permite la comunicación entre los contenedores y la resolución de nombres de servicio. Por ejemplo, el exportador puede conectarse a MySQL utilizando `mysql`, mientras que Prometheus puede consultar los objetivos `cadvisor` y `dbexporter`.
+
+Esta comunicación evita tener que utilizar direcciones IP internas fijas para los servicios de Docker. Los nombres de servicio funcionan como destinos dentro de la red compartida.
+
+### 3.4. Relación entre los componentes
+
+La infraestructura funciona de forma integrada:
+
+1. MySQL administra los datos de la aplicación.
+2. `dbexporter` expone métricas relacionadas con MySQL.
+3. cAdvisor recopila información sobre los contenedores.
+4. Prometheus recolecta y almacena las métricas de los objetivos configurados.
+5. Grafana permite consultar y representar las métricas de Prometheus mediante paneles.
+
+La aplicación CRUD, ejecutada en el host mediante Flask, también expone métricas en el puerto 8888 para que Prometheus pueda recolectarlas.
+
+### 3.5. Sintaxis YAML aplicada
+
+- **`image`** selecciona la imagen y la versión del servicio.
+- **`ports`** publica el puerto del contenedor en el host.
+- **`environment`** configura variables de entorno.
+- **`depends_on`** establece el orden de inicio entre servicios.
+- **`networks`** conecta los servicios a una red común.
+- **`mynetwork`** es el nombre asignado a la red compartida de la infraestructura.
+
+En conjunto, estas directivas permiten definir los servicios, su configuración y las relaciones de comunicación necesarias para el monitoreo.
+
 En YAML, la indentación determina la relación entre las claves y sus valores. Mantener una estructura correcta permite que el archivo sea interpretado adecuadamente.

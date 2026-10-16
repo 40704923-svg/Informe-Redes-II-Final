@@ -199,4 +199,4 @@ El análisis también permite comprender la importancia de la sintaxis YAML, la 
 
 En conclusión, documentar el archivo `docker-compose.yml` y sus archivos auxiliares permite comprender cómo se integran los componentes de la infraestructura de monitoreo y qué función cumple cada uno.
 
-En YAML, la indentación determina la relación entre las claves y sus valores. Mantener una estructura correcta permite que el archivo sea interpretado adecuadamente.
+

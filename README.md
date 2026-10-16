@@ -189,4 +189,14 @@ La aplicación CRUD, ejecutada en el host mediante Flask, también expone métri
 
 En conjunto, estas directivas permiten definir los servicios, su configuración y las relaciones de comunicación necesarias para el monitoreo.
 
+## Conclusión
+
+La infraestructura analizada integra servicios que cumplen funciones diferentes dentro de un sistema de monitoreo. MySQL administra los datos de la aplicación, `dbexporter` permite obtener métricas de la base de datos y cAdvisor recopila información sobre los recursos utilizados por los contenedores.
+
+Prometheus centraliza la recolección de las métricas mediante los objetivos definidos en `prometheus.yml`, mientras que Grafana permite consultarlas y representarlas visualmente. La red compartida `mynetwork` facilita la comunicación entre los servicios mediante sus nombres, y las directivas de Docker Compose establecen la configuración y las dependencias necesarias.
+
+El análisis también permite comprender la importancia de la sintaxis YAML, la indentación, las variables de entorno, los montajes de volúmenes, los puertos publicados y las dependencias entre servicios. Asimismo, distinguir entre el orden de inicio y la disponibilidad real de un servicio ayuda a interpretar correctamente la configuración.
+
+En conclusión, documentar el archivo `docker-compose.yml` y sus archivos auxiliares permite comprender cómo se integran los componentes de la infraestructura de monitoreo y qué función cumple cada uno.
+
 En YAML, la indentación determina la relación entre las claves y sus valores. Mantener una estructura correcta permite que el archivo sea interpretado adecuadamente.
